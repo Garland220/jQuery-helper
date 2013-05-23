@@ -4,10 +4,10 @@
     if (!window.AnimationFrame) {
     	window.AnimationFrame = (function() {
     		return window.webkitRequestAnimationFrame ||
-    		window.mozRequestAnimationFrame || // comment out if FF4 is slow (it caps framerate at ~30fps: https://bugzilla.mozilla.org/show_bug.cgi?id=630127)
+    		window.mozRequestAnimationFrame ||
     		window.oRequestAnimationFrame ||
     		window.msRequestAnimationFrame ||
-    		function(/* function FrameRequestCallback */ callback, /* DOMElement Element */ element) {
+    		function(callback, element) {
     			window.setTimeout(callback, 1000 / 60);
     		};
     	})();
@@ -33,6 +33,24 @@
     	);
     }
 
+    if (!document.Hidden) {
+        document.Hidden = (
+            document.webkitHidden || 
+            document.mozHidden ||
+            document.msHidden ||
+            false
+        );
+    }
+
+    if (!window.URL) {
+        window.URL = (
+            window.webkitURL ||
+            window.mozURL ||
+            window.msURL ||
+            null
+        );
+    }
+
     if (!window.navigator) {
         window.navigator = {onLine: true, userAgent: ""};
     }
@@ -40,12 +58,9 @@
     if (!!window.console) {
     	window.console.error = window.console.error || window.console.log;
     	window.console.warn = window.console.warn || window.console.log;
-    	window.console.group = window.console.group || function() { console.log("======="); };
-    	window.console.groupEnd = window.console.groupEnd || function() { console.log("======="); };
+    	window.console.group = window.console.group || function() { console.log("-------------"); };
+    	window.console.groupEnd = window.console.groupEnd || function() { console.log("-------------"); };
     }
-
-    window.URL = (window.URL || window.webkitURL);
-    document.Hidden = (document.webkitHidden);
 
     $.extend({
         log: function() {
@@ -99,11 +114,11 @@
     	show_logs: function() {
     		if(!!window.console) {
     			console.group();
-                console.log('Logs:');
+                console.log("Logs:");
     			console.log($.log.history || []);
-    			console.log(' \nWarnings:');
+    			console.log(" \nWarnings:");
     			console.log($.warn.history || []);
-    			console.log(' \nErrors:');
+    			console.log(" \nErrors:");
     			console.log($.error.history || []);
     			console.groupEnd();
     		}
@@ -134,7 +149,7 @@
     		document.cookie = name+"="+value+"; "+expires+path+domain;
     	},
     	url_param: function(name) {
-    		return decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)').exec(location.search)||[,""])[1].replace(/\+/g, '%20'))||null;
+    		return decodeURIComponent((new RegExp("[?|&]" + name + "=" + "([^&;]+?)(&|#|;|$)").exec(location.search)||[,""])[1].replace(/\+/g, "%20"))||null;
     	},
 		online: function() {
     		return window.navigator.onLine;
@@ -143,17 +158,17 @@
     		return !window.navigator.onLine;
     	},
     	is_IE: function() {
-    		return (navigator.appName == 'Microsoft Internet Explorer');
+    		return (navigator.appName == "Microsoft Internet Explorer");
     	},
     	get_IE_version: function() {
     	    var version = -1; // Return value assumes failure.
 
-    		if (navigator.appName == 'Microsoft Internet Explorer') {
+    		if (navigator.appName == "Microsoft Internet Explorer") {
     			var agent = navigator.userAgent;
     			var pattern = new RegExp("MSIE ([0-9]{1,}[\.0-9]{0,})");
 
     			if (pattern.exec(agent) != null) {
-    				$.error('Internet Explorer detected.');
+    				$.error("Internet Explorer detected.");
     				version = parseFloat(RegExp.$1);
     			}
     		}
@@ -165,12 +180,12 @@
             return pattern.test(navigator.userAgent);
         },
         is_canvas_supported: function() {
-    		var elem = document.createElement('canvas');
-    		return !!(elem.getContext && elem.getContext('2d'));
+    		var element = document.createElement("canvas");
+    		return !!(element.getContext && element.getContext("2d"));
     	},
     	format_date: function(date) {
     		var date = new Date(date);
-    		var ordimap = {1:'st', 21:'st', 31:'st', 2:'nd', 22:'nd', 3:'rd', 23:'rd'};
+    		var ordimap = {1:"st", 21:"st", 31:"st", 2:"nd", 22:"nd", 3:"rd", 23:"rd"};
     		var monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
     		var n = date.getDate();
@@ -192,24 +207,44 @@
     		return hour+":"+minute+" "+ap;
     	},
     	add_commas: function(number) {
-        	var string = number + '';
+        	var string = number + "";
 
-        	var split = string.split('.');
+        	var split = string.split(".");
         	var string = split[0];
 
-        	var dec = split.length > 1 ? '.' + split[1] : '';
+        	var dec = split.length > 1 ? "." + split[1] : "";
         	var pattern = /(\d+)(\d{3})/;
 
         	while (pattern.test(string)) {
-        		string = string.replace(pattern, '$1' + ',' + '$2');
+        		string = string.replace(pattern, "$1" + "," + "$2");
         	}
         	return string + dec;
         },
         remove_commas: function(string) {
-            return string.replace(/\,/g,'');
+            return string.replace(/\,/g,"");
         },
     	capitalise_first: function(string) {
             return string.charAt(0).toUpperCase() + string.slice(1);
+        },
+        rgb_to_hex: function(rgb) {
+            function get_hex(number) {
+                var hex = (number).toString(16);
+                return $.zero_fill(hex, 2);
+            }
+            return "#" + get_hex(parseInt(rgb.r, 10)) + get_hex(parseInt(rgb.g, 10)) + get_hex(parseInt(rgb.b, 10));
+        },
+        hex_to_rgb: function(string) {
+            var pattern = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i;
+            var result = pattern.exec(string);
+
+            if (!result) {
+                return null;
+            }
+            return {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+            };
         },
         zero_fill: function(number, width) {
     		width -= number.toString().length;
@@ -227,7 +262,8 @@
     		return pattern.test(email);
     	},
         validate_url: function(url) {
-        	return (/^(http[s]?:\/\/){0,1}(www\.){0,1}[a-zA-Z0-9\.\-]+\.[a-zA-Z]{2,5}[\.]{0,1}/).test(url);
+            var pattern = /^(http[s]?:\/\/){0,1}(www\.){0,1}[a-zA-Z0-9\.\-]+\.[a-zA-Z]{2,5}[\.]{0,1}/;
+        	return pattern.test(url);
         }
     });
 

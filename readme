@@ -1,0 +1,4 @@
+
+This plugin provides a number of functions and wrappers to ease development with jQuery.
+
+Console commands are abstracted and logged, to make debugging easier.
