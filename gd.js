@@ -226,14 +226,19 @@
     	capitalise_first: function(string) {
             return string.charAt(0).toUpperCase() + string.slice(1);
         },
+        rgb_to_string: function(rgb) {
+            return rgb.r + ", " + rgb.g + ", " + rgb.b;
+        },
         rgb_to_hex: function(rgb) {
             function get_hex(number) {
-                var hex = (number).toString(16);
+                var hex = parseInt(number, 10).toString(16);
                 return $.zero_fill(hex, 2);
             }
-            return "#" + get_hex(parseInt(rgb.r, 10)) + get_hex(parseInt(rgb.g, 10)) + get_hex(parseInt(rgb.b, 10));
+            return "#" + get_hex(rgb.r) + get_hex(rgb.g) + get_hex(rgb.b);
         },
         hex_to_rgb: function(string) {
+            string = $.expand_hex(string);
+
             var pattern = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i;
             var result = pattern.exec(string);
 
@@ -245,6 +250,14 @@
                 g: parseInt(result[2], 16),
                 b: parseInt(result[3], 16)
             };
+        },
+        expand_hex: function(string) {
+            var pattern = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
+            var result = pattern.exec(string);
+            if (result) {
+                return "#" + result[1] + result[1] + result[2] + result[2] + result[3] + result[3]
+            }
+            return string
         },
         zero_fill: function(number, width) {
     		width -= number.toString().length;
